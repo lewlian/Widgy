@@ -5,10 +5,12 @@ import WidgyCore
 
 struct ChatView: View {
     @Environment(ConversationManager.self) private var conversationManager
+    @Environment(CreditManager.self) private var creditManager
     @State private var messageText = ""
     @State private var showingSaveConfirmation = false
     @State private var errorMessage: String?
     @State private var selectedFamily: WidgetFamily = .systemSmall
+    @State private var showingSubscription = false
 
     private let homeScreenFamilies: [WidgetFamily] = [.systemSmall, .systemMedium, .systemLarge]
 
@@ -44,6 +46,9 @@ struct ChatView: View {
                 Button("OK", role: .cancel) { }
             } message: {
                 Text("Your widget has been saved and is ready to use.")
+            }
+            .sheet(isPresented: $showingSubscription) {
+                SubscriptionView()
             }
         }
     }
@@ -134,6 +139,11 @@ struct ChatView: View {
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 40)
 
+            // Credit info
+            Text("\(creditManager.remainingCredits) credits remaining")
+                .font(.caption)
+                .foregroundStyle(.tertiary)
+
             Spacer()
         }
     }
@@ -213,6 +223,14 @@ struct ChatView: View {
     private func sendMessage() {
         let text = messageText.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !text.isEmpty else { return }
+
+        // Check credits before generating
+        guard creditManager.consumeCredit() else {
+            errorMessage = "No credits remaining. Upgrade your plan to continue creating widgets."
+            showingSubscription = true
+            return
+        }
+
         messageText = ""
 
         // Ensure we have an active conversation
@@ -224,6 +242,8 @@ struct ChatView: View {
             do {
                 _ = try await conversationManager.sendMessage(text)
             } catch {
+                // Refund credit on failure
+                creditManager.remainingCredits += 1
                 errorMessage = error.localizedDescription
             }
         }
@@ -245,4 +265,5 @@ struct ChatView: View {
 #Preview {
     ChatView()
         .environment(ConversationManager())
+        .environment(CreditManager())
 }
