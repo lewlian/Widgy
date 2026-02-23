@@ -54,17 +54,19 @@ struct WidgetEntityQuery: EntityQuery {
 
 struct WidgyTimelineProvider: AppIntentTimelineProvider {
     func placeholder(in context: Context) -> WidgyTimelineEntry {
-        WidgyTimelineEntry(date: Date(), config: SampleConfigs.simpleClock)
+        WidgyTimelineEntry(date: Date(), config: SampleConfigs.simpleClock, resolvedBindings: nil)
     }
 
     func snapshot(for configuration: SelectWidgetIntent, in context: Context) async -> WidgyTimelineEntry {
-        let config = loadConfig(for: configuration)
-        return WidgyTimelineEntry(date: Date(), config: config ?? SampleConfigs.simpleClock)
+        let config = loadConfig(for: configuration) ?? SampleConfigs.simpleClock
+        let bindings = await resolveBindings(for: config)
+        return WidgyTimelineEntry(date: Date(), config: config, resolvedBindings: bindings)
     }
 
     func timeline(for configuration: SelectWidgetIntent, in context: Context) async -> Timeline<WidgyTimelineEntry> {
         let config = loadConfig(for: configuration)
-        let entry = WidgyTimelineEntry(date: Date(), config: config)
+        let bindings = await resolveBindings(for: config)
+        let entry = WidgyTimelineEntry(date: Date(), config: config, resolvedBindings: bindings)
 
         // Refresh every 15 minutes for data-bound widgets, every hour for static
         let hasBindings = config?.dataBindings?.isEmpty == false
@@ -72,6 +74,17 @@ struct WidgyTimelineProvider: AppIntentTimelineProvider {
         let nextRefresh = Date().addingTimeInterval(refreshInterval)
 
         return Timeline(entries: [entry], policy: .after(nextRefresh))
+    }
+
+    private func resolveBindings(for config: WidgetConfig?) async -> [String: String] {
+        let registry = DataProviderRegistry.makeDefault()
+        var sources: Set<DataSource> = [.dateTime]
+        if let bindings = config?.dataBindings {
+            for binding in bindings {
+                sources.insert(binding.value.source)
+            }
+        }
+        return await registry.resolveBindings(for: sources)
     }
 
     private func loadConfig(for intent: SelectWidgetIntent) -> WidgetConfig? {
@@ -89,6 +102,7 @@ struct WidgyTimelineProvider: AppIntentTimelineProvider {
 struct WidgyTimelineEntry: TimelineEntry {
     let date: Date
     let config: WidgetConfig?
+    let resolvedBindings: [String: String]?
 }
 
 // MARK: - Widget View
@@ -119,20 +133,36 @@ struct WidgyWidgetView: View {
     }
 
     private func makeContext() -> RenderContext {
-        // Provide basic date/time bindings directly in the widget
+        // Synchronously provide date/time as baseline, other providers
+        // are pre-resolved via the timeline provider
         let now = Date()
         let timeFormatter = DateFormatter()
-        timeFormatter.dateFormat = "h:mm"
+        timeFormatter.dateFormat = "h:mm a"
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "EEEE, MMM d"
+        let weekdayFormatter = DateFormatter()
+        weekdayFormatter.dateFormat = "EEEE"
+        let monthFormatter = DateFormatter()
+        monthFormatter.dateFormat = "MMMM"
+        let calendar = Calendar.current
+
+        var values: [String: String] = [
+            "date_time.time": timeFormatter.string(from: now),
+            "date_time.date": dateFormatter.string(from: now),
+            "date_time.hour": "\(calendar.component(.hour, from: now))",
+            "date_time.minute": String(format: "%02d", calendar.component(.minute, from: now)),
+            "date_time.weekday": weekdayFormatter.string(from: now),
+            "date_time.month": monthFormatter.string(from: now),
+            "date_time.year": "\(calendar.component(.year, from: now))",
+        ]
+
+        // Merge any pre-resolved values from the timeline entry
+        if let preResolved = entry.resolvedBindings {
+            values.merge(preResolved) { _, new in new }
+        }
 
         return RenderContext(
-            bindingValues: [
-                "date_time.time": timeFormatter.string(from: now),
-                "date_time.date": dateFormatter.string(from: now),
-                "date_time.hour": "\(Calendar.current.component(.hour, from: now))",
-                "date_time.minute": String(format: "%02d", Calendar.current.component(.minute, from: now))
-            ],
+            bindingValues: values,
             isWidgetExtension: true
         )
     }

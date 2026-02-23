@@ -23,6 +23,7 @@
 		89F1C1F9C160C6082E3EA3B1 /* SystemPrompt.swift in Sources */ = {isa = PBXBuildFile; fileRef = 393379307E4B7BE71899B8E1 /* SystemPrompt.swift */; };
 		96684B7348F5A73F6D168158 /* ConversationListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37DDE34E35AF3C8E4060269F /* ConversationListView.swift */; };
 		97F35BC7B046F4063836C024 /* WidgyCore in Frameworks */ = {isa = PBXBuildFile; productRef = 7AA22A9C80F6EE576F78FE8E /* WidgyCore */; };
+		A070329FF514E7897E69EF33 /* DataResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 234808417973B470B9890E26 /* DataResolver.swift */; };
 		A9F5CE6491B6E35C1258F28A /* AuthManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8B9C1A224F7715390EA53C31 /* AuthManager.swift */; };
 		B7CE0B090B3DE2481B0C073D /* ChatView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0291F562609773127F920358 /* ChatView.swift */; };
 		E3E5839EFEED0347740EDBA6 /* WidgetGalleryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 46049D63089E83C690E8985C /* WidgetGalleryView.swift */; };
@@ -59,6 +60,7 @@
 		0291F562609773127F920358 /* ChatView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatView.swift; sourceTree = "<group>"; };
 		070D08454E7D4C159FED243C /* WidgetCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetCardView.swift; sourceTree = "<group>"; };
 		1AB8B86C7F5CE7A3B7DFD440 /* AIConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIConfig.swift; sourceTree = "<group>"; };
+		234808417973B470B9890E26 /* DataResolver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataResolver.swift; sourceTree = "<group>"; };
 		371970F1AFEF1AF2FF923F8B /* WidgetGenerationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetGenerationService.swift; sourceTree = "<group>"; };
 		37DDE34E35AF3C8E4060269F /* ConversationListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConversationListView.swift; sourceTree = "<group>"; };
 		393379307E4B7BE71899B8E1 /* SystemPrompt.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemPrompt.swift; sourceTree = "<group>"; };
@@ -208,6 +210,7 @@
 		CA039615FDFD02058AFD8423 /* Services */ = {
 			isa = PBXGroup;
 			children = (
+				234808417973B470B9890E26 /* DataResolver.swift */,
 				CC7DBAB8F8E1E447928DB2B4 /* AI */,
 				E6307317ED615CE3044935D5 /* Auth */,
 				2E0E2D523D362BE0773AB3F8 /* Network */,
@@ -386,6 +389,7 @@
 				96684B7348F5A73F6D168158 /* ConversationListView.swift in Sources */,
 				F58081829CC0C599EB3C4E3E /* ConversationManager.swift in Sources */,
 				409BAF976B4EFECF9FC097B7 /* CreditManager.swift in Sources */,
+				A070329FF514E7897E69EF33 /* DataResolver.swift in Sources */,
 				2030B3913A64FBAEA754CAE5 /* MessageBubble.swift in Sources */,
 				5C0EB4C63DCB5F0F65509794 /* SignInView.swift in Sources */,
 				6EAF8C81A4C974E02109BDD7 /* StoreManager.swift in Sources */,
@@ -536,6 +540,10 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSCalendarsFullAccessUsageDescription = "Widgy needs calendar access to display your upcoming events in widgets.";
+				INFOPLIST_KEY_NSCalendarsUsageDescription = "Widgy can show your upcoming calendar events in widgets.";
+				INFOPLIST_KEY_NSHealthShareUsageDescription = "Widgy can display your health data like steps, distance, and calories in widgets.";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Widgy uses your location to show local weather and location info in your widgets.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -619,6 +627,10 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSCalendarsFullAccessUsageDescription = "Widgy needs calendar access to display your upcoming events in widgets.";
+				INFOPLIST_KEY_NSCalendarsUsageDescription = "Widgy can show your upcoming calendar events in widgets.";
+				INFOPLIST_KEY_NSHealthShareUsageDescription = "Widgy can display your health data like steps, distance, and calories in widgets.";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Widgy uses your location to show local weather and location info in your widgets.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;

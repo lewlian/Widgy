@@ -32,6 +32,10 @@ targets:
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
         GENERATE_INFOPLIST_FILE: true
+        INFOPLIST_KEY_NSLocationWhenInUseUsageDescription: "Widgy uses your location to show local weather and location info in your widgets."
+        INFOPLIST_KEY_NSHealthShareUsageDescription: "Widgy can display your health data like steps, distance, and calories in widgets."
+        INFOPLIST_KEY_NSCalendarsUsageDescription: "Widgy can show your upcoming calendar events in widgets."
+        INFOPLIST_KEY_NSCalendarsFullAccessUsageDescription: "Widgy needs calendar access to display your upcoming events in widgets."
         MARKETING_VERSION: "1.0.0"
         CURRENT_PROJECT_VERSION: "1"
 
