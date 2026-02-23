@@ -1,0 +1,77 @@
+name: Widgy
+options:
+  bundleIdPrefix: com.lewlian
+  deploymentTarget:
+    iOS: "26.0"
+  generateEmptyDirectories: true
+
+packages:
+  WidgyCore:
+    path: Packages/WidgyCore
+
+targets:
+  Widgy:
+    type: application
+    platform: iOS
+    sources:
+      - path: Widgy
+    dependencies:
+      - package: WidgyCore
+      - target: WidgyWidgets
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.lewlian.Widgy
+        INFOPLIST_KEY_UIApplicationSceneManifest_Generation: true
+        INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents: true
+        INFOPLIST_KEY_UILaunchScreen_Generation: true
+        INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone: "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight"
+        SWIFT_STRICT_CONCURRENCY: complete
+        SWIFT_VERSION: "6.0"
+        CODE_SIGN_ENTITLEMENTS: Widgy/Widgy.entitlements
+        CODE_SIGN_STYLE: Automatic
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
+        GENERATE_INFOPLIST_FILE: true
+        MARKETING_VERSION: "1.0.0"
+        CURRENT_PROJECT_VERSION: "1"
+
+  WidgyWidgets:
+    type: app-extension
+    platform: iOS
+    sources:
+      - path: WidgyWidgets
+    dependencies:
+      - package: WidgyCore
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.lewlian.Widgy.WidgyWidgets
+        SWIFT_STRICT_CONCURRENCY: complete
+        SWIFT_VERSION: "6.0"
+        CODE_SIGN_ENTITLEMENTS: WidgyWidgets/WidgyWidgets.entitlements
+        CODE_SIGN_STYLE: Automatic
+        INFOPLIST_KEY_CFBundleDisplayName: WidgyWidgets
+        INFOPLIST_KEY_NSWidgetWantsLocation: false
+        MARKETING_VERSION: "1.0.0"
+        CURRENT_PROJECT_VERSION: "1"
+    info:
+      path: WidgyWidgets/Info.plist
+      properties:
+        CFBundleShortVersionString: "1.0.0"
+        CFBundleVersion: "1"
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.widgetkit-extension
+
+schemes:
+  Widgy:
+    build:
+      targets:
+        Widgy: all
+        WidgyWidgets: all
+    run:
+      config: Debug
+    test:
+      config: Debug
+    profile:
+      config: Release
+    archive:
+      config: Release
