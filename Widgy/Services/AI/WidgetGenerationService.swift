@@ -84,9 +84,7 @@ final class WidgetGenerationService {
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
 
-        if let anonKey = AIConfig.supabaseAnonKey {
-            request.setValue("Bearer \(anonKey)", forHTTPHeaderField: "Authorization")
-        }
+        request.setValue("Bearer \(AIConfig.supabaseAnonKey)", forHTTPHeaderField: "Authorization")
 
         let body = GenerationRequest(
             prompt: prompt,

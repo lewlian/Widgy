@@ -3,21 +3,15 @@ import Foundation
 // MARK: - AI Configuration
 
 enum AIConfig {
+    /// Supabase project URL
+    static let supabaseURL = "https://wjvuhmajhqmcblclqptl.supabase.co"
+
+    /// Supabase anonymous key (public — safe to embed in client)
+    static let supabaseAnonKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndqdnVobWFqaHFtY2JsY2xxcHRsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4NDMzNzksImV4cCI6MjA4NzQxOTM3OX0.E_5U6c8eh-Z4PTeiszmbzcl6ZOSduXPV2YM1LgjOm1I"
+
     /// Supabase Edge Function URL for widget generation
-    /// Set via environment or configuration
     static var generateWidgetURL: URL {
-        let baseURL = supabaseURL ?? "https://wjvuhmajhqmcblclqptl.supabase.co"
-        return URL(string: "\(baseURL)/functions/v1/generate-widget")!
-    }
-
-    /// Supabase project URL — set this at app launch
-    static var supabaseURL: String? {
-        ProcessInfo.processInfo.environment["SUPABASE_URL"]
-    }
-
-    /// Supabase anonymous key for auth
-    static var supabaseAnonKey: String? {
-        ProcessInfo.processInfo.environment["SUPABASE_ANON_KEY"]
+        URL(string: "\(supabaseURL)/functions/v1/generate-widget")!
     }
 
     /// Maximum output tokens per generation
