@@ -111,13 +111,97 @@ struct WidgyWidgetView: View {
     @Environment(\.widgetFamily) var family
     let entry: WidgyTimelineEntry
 
+    private var isLockScreen: Bool {
+        switch family {
+        case .accessoryCircular, .accessoryRectangular, .accessoryInline:
+            return true
+        default:
+            return false
+        }
+    }
+
     var body: some View {
-        if let config = entry.config {
-            WidgetConfigRenderer(config: config, context: makeContext())
-                .containerBackground(.fill.tertiary, for: .widget)
+        if isLockScreen {
+            lockScreenBody
         } else {
-            emptyStateView
+            homeScreenBody
+        }
+    }
+
+    // MARK: - Home Screen
+
+    private var homeScreenBody: some View {
+        Group {
+            if let config = entry.config {
+                WidgetConfigRenderer(config: config, context: makeContext())
+            } else {
+                emptyStateView
+            }
+        }
+        .containerBackground(.fill.tertiary, for: .widget)
+    }
+
+    // MARK: - Lock Screen
+
+    @ViewBuilder
+    private var lockScreenBody: some View {
+        switch family {
+        case .accessoryInline:
+            lockScreenInline
+        case .accessoryCircular:
+            lockScreenCircular
                 .containerBackground(.fill.tertiary, for: .widget)
+        case .accessoryRectangular:
+            lockScreenRectangular
+                .containerBackground(.fill.tertiary, for: .widget)
+        default:
+            EmptyView()
+        }
+    }
+
+    private var lockScreenInline: some View {
+        ViewThatFits {
+            if let config = entry.config {
+                Text(config.name)
+                    .widgetAccentable()
+            } else {
+                Text("Widgy")
+                    .widgetAccentable()
+            }
+        }
+    }
+
+    private var lockScreenCircular: some View {
+        Group {
+            if let config = entry.config {
+                WidgetConfigRenderer(config: config, context: makeContext())
+                    .widgetAccentable()
+            } else {
+                ZStack {
+                    AccessoryWidgetBackground()
+                    Image(systemName: "sparkles")
+                        .font(.title3)
+                        .widgetAccentable()
+                }
+            }
+        }
+    }
+
+    private var lockScreenRectangular: some View {
+        Group {
+            if let config = entry.config {
+                WidgetConfigRenderer(config: config, context: makeContext())
+                    .widgetAccentable()
+            } else {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Widgy")
+                        .font(.headline)
+                        .widgetAccentable()
+                    Text("Open app to create a widget")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            }
         }
     }
 
@@ -179,7 +263,10 @@ struct WidgyWidget: Widget {
         }
         .configurationDisplayName("Widgy")
         .description("AI-powered custom widgets")
-        .supportedFamilies([.systemSmall, .systemMedium, .systemLarge])
+        .supportedFamilies([
+            .systemSmall, .systemMedium, .systemLarge,
+            .accessoryCircular, .accessoryRectangular, .accessoryInline
+        ])
     }
 }
 

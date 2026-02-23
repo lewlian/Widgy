@@ -7,6 +7,7 @@ struct WidgyApp: App {
     @State private var authManager = AuthManager()
     @State private var storeManager = StoreManager()
     @State private var creditManager = CreditManager()
+    @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = false
 
     var body: some Scene {
         WindowGroup {
@@ -18,6 +19,16 @@ struct WidgyApp: App {
                 .onChange(of: storeManager.currentTier) { _, newTier in
                     creditManager.updateTier(newTier)
                 }
+                .fullScreenCover(isPresented: showOnboarding) {
+                    OnboardingView()
+                }
         }
+    }
+
+    private var showOnboarding: Binding<Bool> {
+        Binding(
+            get: { !hasCompletedOnboarding },
+            set: { newValue in hasCompletedOnboarding = !newValue }
+        )
     }
 }

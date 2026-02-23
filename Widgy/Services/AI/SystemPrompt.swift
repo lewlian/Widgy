@@ -81,6 +81,19 @@ enum SystemPrompt {
         - `systemSmall`: 170x170pt — keep content minimal (2-4 elements)
         - `systemMedium`: 364x170pt — can show more horizontal content
         - `systemLarge`: 364x382pt — full content layout
+        - `accessoryCircular`: 76x76pt — lockscreen circular complication, very compact
+        - `accessoryRectangular`: 172x76pt — lockscreen rectangular, 2-3 lines of content
+        - `accessoryInline`: 234x26pt — lockscreen single line of text, inline with clock
+
+        ## Lockscreen Widget Guidelines
+        Lockscreen widgets (accessoryCircular, accessoryRectangular, accessoryInline) are **monochrome**. Follow these rules:
+        - Do NOT use colors — the system renders everything in a single tint. Use only semantic colors like `primary` and `secondaryLabel`.
+        - Do NOT use `glass_effect`, `multicolor` rendering, or colored backgrounds.
+        - For `accessoryInline`: Use ONLY a single `Text` node (optionally with an SF Symbol via string interpolation). No stacks or containers.
+        - For `accessoryCircular`: Use a simple `ZStack` with an SF Symbol or short text. Keep to 1-2 elements max.
+        - For `accessoryRectangular`: Use a `VStack` with 2-3 lines of text or a compact layout. Keep content minimal.
+        - Use `monochrome` or `hierarchical` rendering mode for SF Symbols on lockscreen.
+        - Prefer high-contrast content — bold text, clear symbols.
 
         ## Rules
         1. Generate a COMPLETE, valid JSON WidgetConfig
@@ -88,8 +101,9 @@ enum SystemPrompt {
         3. Keep layouts simple — max 3-4 levels of nesting
         4. Use appropriate SF Symbol names (check they exist)
         5. For \(family.displayName) widgets, respect the size constraints
-        6. Use `glass_effect: true` for a modern Liquid Glass look when appropriate
+        6. Use `glass_effect: true` for a modern Liquid Glass look when appropriate (homescreen only, NOT lockscreen)
         7. When the user asks to modify an existing widget, keep unchanged parts and only modify what they asked for
+        8. When user asks for a "lockscreen" or "lock screen" widget, use the appropriate accessory family
 
         \(fewShotExamples)
         """
