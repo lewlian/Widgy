@@ -1,23 +1,86 @@
 import WidgetKit
 import SwiftUI
+import AppIntents
 import WidgyCore
+
+// MARK: - Widget Selection Intent
+
+struct SelectWidgetIntent: AppIntent, WidgetConfigurationIntent {
+    static let title: LocalizedStringResource = "Select Widget"
+    static let description: IntentDescription = "Choose which saved widget to display"
+
+    @Parameter(title: "Widget")
+    var widgetEntity: WidgetEntity?
+
+    func perform() async throws -> some IntentResult {
+        .result()
+    }
+}
+
+// MARK: - Widget Entity
+
+struct WidgetEntity: AppEntity {
+    var id: String
+    var name: String
+
+    static let typeDisplayRepresentation: TypeDisplayRepresentation = "Widget"
+    static let defaultQuery = WidgetEntityQuery()
+
+    var displayRepresentation: DisplayRepresentation {
+        DisplayRepresentation(title: "\(name)")
+    }
+}
+
+struct WidgetEntityQuery: EntityQuery {
+    func entities(for identifiers: [String]) async throws -> [WidgetEntity] {
+        let configs = (try? AppGroupManager.shared.loadAllWidgetConfigs()) ?? []
+        return configs
+            .filter { identifiers.contains($0.id.uuidString) }
+            .map { WidgetEntity(id: $0.id.uuidString, name: $0.name) }
+    }
+
+    func suggestedEntities() async throws -> [WidgetEntity] {
+        let configs = (try? AppGroupManager.shared.loadAllWidgetConfigs()) ?? []
+        return configs.map { WidgetEntity(id: $0.id.uuidString, name: $0.name) }
+    }
+
+    func defaultResult() async -> WidgetEntity? {
+        let configs = (try? AppGroupManager.shared.loadAllWidgetConfigs()) ?? []
+        return configs.first.map { WidgetEntity(id: $0.id.uuidString, name: $0.name) }
+    }
+}
 
 // MARK: - Timeline Provider
 
-struct WidgyTimelineProvider: TimelineProvider {
+struct WidgyTimelineProvider: AppIntentTimelineProvider {
     func placeholder(in context: Context) -> WidgyTimelineEntry {
         WidgyTimelineEntry(date: Date(), config: SampleConfigs.simpleClock)
     }
 
-    func getSnapshot(in context: Context, completion: @escaping (WidgyTimelineEntry) -> Void) {
-        let entry = WidgyTimelineEntry(date: Date(), config: SampleConfigs.simpleClock)
-        completion(entry)
+    func snapshot(for configuration: SelectWidgetIntent, in context: Context) async -> WidgyTimelineEntry {
+        let config = loadConfig(for: configuration)
+        return WidgyTimelineEntry(date: Date(), config: config ?? SampleConfigs.simpleClock)
     }
 
-    func getTimeline(in context: Context, completion: @escaping (Timeline<WidgyTimelineEntry>) -> Void) {
-        let entry = WidgyTimelineEntry(date: Date(), config: SampleConfigs.simpleClock)
-        let timeline = Timeline(entries: [entry], policy: .after(Date().addingTimeInterval(900)))
-        completion(timeline)
+    func timeline(for configuration: SelectWidgetIntent, in context: Context) async -> Timeline<WidgyTimelineEntry> {
+        let config = loadConfig(for: configuration)
+        let entry = WidgyTimelineEntry(date: Date(), config: config)
+
+        // Refresh every 15 minutes for data-bound widgets, every hour for static
+        let hasBindings = config?.dataBindings?.isEmpty == false
+        let refreshInterval: TimeInterval = hasBindings ? 900 : 3600
+        let nextRefresh = Date().addingTimeInterval(refreshInterval)
+
+        return Timeline(entries: [entry], policy: .after(nextRefresh))
+    }
+
+    private func loadConfig(for intent: SelectWidgetIntent) -> WidgetConfig? {
+        guard let entityID = intent.widgetEntity?.id,
+              let uuid = UUID(uuidString: entityID) else {
+            // No widget selected — return first available or sample
+            return (try? AppGroupManager.shared.loadAllWidgetConfigs())?.first
+        }
+        return try? AppGroupManager.shared.loadWidgetConfig(id: uuid)
     }
 }
 
@@ -31,28 +94,47 @@ struct WidgyTimelineEntry: TimelineEntry {
 // MARK: - Widget View
 
 struct WidgyWidgetView: View {
+    @Environment(\.widgetFamily) var family
     let entry: WidgyTimelineEntry
 
     var body: some View {
         if let config = entry.config {
-            // Placeholder — renderer comes in Phase 2
-            VStack {
-                Text(config.name)
-                    .font(.headline)
-                Text("Widget Preview")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            }
-            .containerBackground(.fill.tertiary, for: .widget)
+            WidgetConfigRenderer(config: config, context: makeContext())
+                .containerBackground(.fill.tertiary, for: .widget)
         } else {
-            VStack {
-                Image(systemName: "widget.small")
-                    .font(.title)
-                Text("Tap to configure")
-                    .font(.caption)
-            }
-            .containerBackground(.fill.tertiary, for: .widget)
+            emptyStateView
+                .containerBackground(.fill.tertiary, for: .widget)
         }
+    }
+
+    private var emptyStateView: some View {
+        VStack(spacing: 4) {
+            Image(systemName: "plus.circle")
+                .font(.title2)
+                .foregroundStyle(.secondary)
+            Text("Open Widgy to create")
+                .font(.caption2)
+                .foregroundStyle(.tertiary)
+        }
+    }
+
+    private func makeContext() -> RenderContext {
+        // Provide basic date/time bindings directly in the widget
+        let now = Date()
+        let timeFormatter = DateFormatter()
+        timeFormatter.dateFormat = "h:mm"
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "EEEE, MMM d"
+
+        return RenderContext(
+            bindingValues: [
+                "date_time.time": timeFormatter.string(from: now),
+                "date_time.date": dateFormatter.string(from: now),
+                "date_time.hour": "\(Calendar.current.component(.hour, from: now))",
+                "date_time.minute": String(format: "%02d", Calendar.current.component(.minute, from: now))
+            ],
+            isWidgetExtension: true
+        )
     }
 }
 
@@ -62,7 +144,7 @@ struct WidgyWidget: Widget {
     let kind: String = "WidgyWidget"
 
     var body: some WidgetConfiguration {
-        StaticConfiguration(kind: kind, provider: WidgyTimelineProvider()) { entry in
+        AppIntentConfiguration(kind: kind, intent: SelectWidgetIntent.self, provider: WidgyTimelineProvider()) { entry in
             WidgyWidgetView(entry: entry)
         }
         .configurationDisplayName("Widgy")
