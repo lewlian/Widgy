@@ -2,26 +2,27 @@ import SwiftUI
 import WidgyCore
 
 struct ContentView: View {
+    @Environment(ConversationManager.self) private var conversationManager
+    @State private var selectedTab = 0
+
     var body: some View {
-        NavigationStack {
-            VStack(spacing: 20) {
-                Image(systemName: "widget.small")
-                    .font(.system(size: 60))
-                    .foregroundStyle(.tint)
-
-                Text("Widgy")
-                    .font(.largeTitle.bold())
-
-                Text("AI-powered widget creation")
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
+        TabView(selection: $selectedTab) {
+            Tab("Chat", systemImage: "bubble.left.and.text.bubble.right", value: 0) {
+                ChatView()
             }
-            .padding()
-            .navigationTitle("Widgy")
+
+            Tab("Gallery", systemImage: "square.grid.2x2", value: 1) {
+                WidgetGalleryView()
+            }
+
+            Tab("History", systemImage: "clock.arrow.circlepath", value: 2) {
+                ConversationListView()
+            }
         }
     }
 }
 
 #Preview {
     ContentView()
+        .environment(ConversationManager())
 }
