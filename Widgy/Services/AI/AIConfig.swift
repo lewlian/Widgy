@@ -6,7 +6,7 @@ enum AIConfig {
     /// Supabase Edge Function URL for widget generation
     /// Set via environment or configuration
     static var generateWidgetURL: URL {
-        let baseURL = supabaseURL ?? "https://your-project.supabase.co"
+        let baseURL = supabaseURL ?? "https://wjvuhmajhqmcblclqptl.supabase.co"
         return URL(string: "\(baseURL)/functions/v1/generate-widget")!
     }
 
