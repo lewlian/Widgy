@@ -18,7 +18,7 @@ enum SubscriptionTier: String, Codable, Sendable {
 
     var monthlyCredits: Int {
         switch self {
-        case .free: return 3
+        case .free: return 100 // TODO: change back to 3 for production
         case .standard: return 15
         case .pro: return 50
         }
