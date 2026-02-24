@@ -78,13 +78,41 @@ struct WidgyTimelineProvider: AppIntentTimelineProvider {
 
     private func resolveBindings(for config: WidgetConfig?) async -> [String: String] {
         let registry = DataProviderRegistry.makeDefault()
+        // Scan the config tree for all {{source.field}} placeholders to determine needed sources
         var sources: Set<DataSource> = [.dateTime]
-        if let bindings = config?.dataBindings {
-            for binding in bindings {
-                sources.insert(binding.value.source)
+        if let config {
+            let placeholders = scanPlaceholders(in: config.root)
+            for (sourceName, _) in placeholders {
+                if let source = DataSource(rawValue: sourceName) {
+                    sources.insert(source)
+                }
             }
         }
         return await registry.resolveBindings(for: sources)
+    }
+
+    private func scanPlaceholders(in node: WidgetNode) -> [(source: String, field: String)] {
+        var results: [(String, String)] = []
+        switch node {
+        case .text(let props):
+            results.append(contentsOf: BindingResolution.extractPlaceholders(from: props.content))
+        case .vStack(let props):
+            for child in props.children { results.append(contentsOf: scanPlaceholders(in: child)) }
+        case .hStack(let props):
+            for child in props.children { results.append(contentsOf: scanPlaceholders(in: child)) }
+        case .zStack(let props):
+            for child in props.children { results.append(contentsOf: scanPlaceholders(in: child)) }
+        case .frame(let props):
+            results.append(contentsOf: scanPlaceholders(in: props.child))
+        case .padding(let props):
+            results.append(contentsOf: scanPlaceholders(in: props.child))
+        case .gauge(let props):
+            if let label = props.currentValueLabel {
+                results.append(contentsOf: BindingResolution.extractPlaceholders(from: label))
+            }
+        default: break
+        }
+        return results
     }
 
     private func loadConfig(for intent: SelectWidgetIntent) -> WidgetConfig? {
@@ -138,7 +166,24 @@ struct WidgyWidgetView: View {
                 emptyStateView
             }
         }
-        .containerBackground(.fill.tertiary, for: .widget)
+        .containerBackground(for: .widget) {
+            extractBackgroundColor(from: entry.config)
+        }
+    }
+
+    /// Extract the background fill color from the config's node tree.
+    /// Looks for a ContainerRelativeShape in the root ZStack (the typical pattern).
+    private func extractBackgroundColor(from config: WidgetConfig?) -> Color {
+        guard let config else { return Color(.systemBackground) }
+        if case .zStack(let props) = config.root {
+            for child in props.children {
+                if case .containerRelativeShape(let bgProps) = child,
+                   let fill = bgProps?.fill {
+                    return ColorRenderer.resolve(fill)
+                }
+            }
+        }
+        return Color(.systemBackground)
     }
 
     // MARK: - Lock Screen
@@ -150,10 +195,10 @@ struct WidgyWidgetView: View {
             lockScreenInline
         case .accessoryCircular:
             lockScreenCircular
-                .containerBackground(.fill.tertiary, for: .widget)
+                .containerBackground(.clear, for: .widget)
         case .accessoryRectangular:
             lockScreenRectangular
-                .containerBackground(.fill.tertiary, for: .widget)
+                .containerBackground(.clear, for: .widget)
         default:
             EmptyView()
         }
@@ -263,6 +308,7 @@ struct WidgyWidget: Widget {
         }
         .configurationDisplayName("Widgy")
         .description("AI-powered custom widgets")
+        .containerBackgroundRemovable(false)
         .supportedFamilies([
             .systemSmall, .systemMedium, .systemLarge,
             .accessoryCircular, .accessoryRectangular, .accessoryInline
