@@ -5,6 +5,7 @@ import WidgyCore
 
 struct MessageBubble: View {
     let message: ConversationMessage
+    @State private var widgetAppeared = false
 
     var body: some View {
         HStack {
@@ -21,7 +22,15 @@ struct MessageBubble: View {
                 // Inline widget preview if assistant message has a config
                 if let config = message.widgetConfig {
                     WidgetPreviewChrome(config: config)
+                        .shadow(color: .accentColor.opacity(widgetAppeared ? 0.25 : 0), radius: 12, y: 2)
                         .shadow(color: .black.opacity(0.1), radius: 8, y: 4)
+                        .scaleEffect(widgetAppeared ? 1 : 0.85)
+                        .opacity(widgetAppeared ? 1 : 0)
+                        .onAppear {
+                            withAnimation(.spring(duration: 0.5, bounce: 0.3)) {
+                                widgetAppeared = true
+                            }
+                        }
                 }
             }
 
