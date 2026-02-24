@@ -8,7 +8,7 @@ public struct WidgetPreviewChrome: View {
     let config: WidgetConfig
     let context: RenderContext
 
-    public init(config: WidgetConfig, context: RenderContext = .default) {
+    public init(config: WidgetConfig, context: RenderContext = .preview) {
         self.config = config
         self.context = context
     }
@@ -16,7 +16,6 @@ public struct WidgetPreviewChrome: View {
     public var body: some View {
         NodeRenderer(node: config.root, context: context)
             .frame(width: dimensions.width, height: dimensions.height)
-            .padding(widgetPadding)
             .background(.ultraThinMaterial)
             .clipShape(RoundedRectangle(cornerRadius: cornerRadius))
     }

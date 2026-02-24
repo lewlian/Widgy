@@ -192,9 +192,18 @@ public struct NodeRenderer: View {
 
     @ViewBuilder
     private func renderContainerRelativeShape(_ props: ContainerRelativeShapeProperties?) -> some View {
-        ContainerRelativeShape()
-            .fill(props?.fill.map { ColorRenderer.resolve($0) } ?? Color.clear)
-            .applyNodeStyle(props?.style)
+        let fillColor = props?.fill.map { ColorRenderer.resolve($0) } ?? Color.clear
+        if context.isWidgetExtension {
+            // In widget extension: use solid fill only — no glass effect.
+            // The widget's containerBackground handles the background treatment.
+            ContainerRelativeShape()
+                .fill(fillColor)
+        } else {
+            // Use RoundedRectangle in non-widget contexts (app preview)
+            RoundedRectangle(cornerRadius: 20)
+                .fill(fillColor)
+                .applyNodeStyle(props?.style)
+        }
     }
 
     // MARK: - Alignment Mappers
