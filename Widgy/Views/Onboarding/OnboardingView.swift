@@ -1,14 +1,18 @@
 import SwiftUI
+import WidgyCore
 
 struct OnboardingView: View {
     @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = false
     @State private var currentPage = 0
+    @State private var demoWidgetIndex = 0
+
+    private let demoWidgets = SampleConfigs.all
 
     var body: some View {
         TabView(selection: $currentPage) {
             welcomePage
                 .tag(0)
-            howItWorksPage
+            previewPage
                 .tag(1)
             getStartedPage
                 .tag(2)
@@ -46,33 +50,47 @@ struct OnboardingView: View {
         .padding()
     }
 
-    // MARK: - Page 2: How It Works
+    // MARK: - Page 2: Live Preview Demo
 
-    private var howItWorksPage: some View {
-        VStack(spacing: 32) {
+    private var previewPage: some View {
+        VStack(spacing: 24) {
             Spacer()
 
-            Text("How It Works")
+            Text("See It Live")
                 .font(.largeTitle.bold())
 
-            VStack(alignment: .leading, spacing: 24) {
-                stepRow(
-                    icon: "text.bubble.fill",
-                    title: "Describe",
-                    detail: "Tell AI what you want your widget to look like."
-                )
-                stepRow(
-                    icon: "eye.fill",
-                    title: "Preview",
-                    detail: "See a live preview and refine until it's perfect."
-                )
-                stepRow(
-                    icon: "apps.iphone",
-                    title: "Place",
-                    detail: "Add it to your homescreen or lockscreen."
-                )
+            Text("Widgets render instantly from your description.")
+                .font(.body)
+                .foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal, 32)
+
+            // Live widget demo
+            WidgetPreviewChrome(config: demoWidgets[demoWidgetIndex])
+                .shadow(color: .accentColor.opacity(0.2), radius: 16, y: 4)
+                .animation(.spring(duration: 0.4, bounce: 0.2), value: demoWidgetIndex)
+                .padding(.vertical, 8)
+
+            // Widget name label
+            Text(demoWidgets[demoWidgetIndex].name)
+                .font(.subheadline.weight(.medium))
+                .foregroundStyle(.secondary)
+
+            // Dot selector
+            HStack(spacing: 12) {
+                ForEach(demoWidgets.indices, id: \.self) { index in
+                    Button {
+                        withAnimation(.spring(duration: 0.3)) {
+                            demoWidgetIndex = index
+                        }
+                    } label: {
+                        Circle()
+                            .fill(index == demoWidgetIndex ? Color.accentColor : Color.secondary.opacity(0.3))
+                            .frame(width: 8, height: 8)
+                    }
+                    .buttonStyle(.plain)
+                }
             }
-            .padding(.horizontal, 32)
 
             Spacer()
             Spacer()
@@ -114,27 +132,6 @@ struct OnboardingView: View {
             .padding(.bottom, 48)
         }
         .padding()
-    }
-
-    // MARK: - Helpers
-
-    private func stepRow(icon: String, title: String, detail: String) -> some View {
-        HStack(spacing: 16) {
-            Image(systemName: icon)
-                .font(.title2)
-                .foregroundStyle(.tint)
-                .frame(width: 44, height: 44)
-                .background(.tint.opacity(0.12))
-                .clipShape(RoundedRectangle(cornerRadius: 10))
-
-            VStack(alignment: .leading, spacing: 2) {
-                Text(title)
-                    .font(.headline)
-                Text(detail)
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-            }
-        }
     }
 }
 
