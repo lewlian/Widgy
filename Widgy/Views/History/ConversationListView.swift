@@ -16,6 +16,7 @@ struct ConversationListView: View {
                 }
             }
             .navigationTitle("History")
+            .creditBadge()
         }
     }
 

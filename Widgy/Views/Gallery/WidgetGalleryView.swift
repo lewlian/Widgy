@@ -28,6 +28,7 @@ struct WidgetGalleryView: View {
                 }
             }
             .navigationTitle("My Widgets")
+            .creditBadge()
             .onAppear { loadWidgets() }
             .refreshable { loadWidgets() }
             .alert("Error", isPresented: .init(

@@ -36,6 +36,7 @@ struct ChatView: View {
             }
             .navigationTitle("New Widget")
             .navigationBarTitleDisplayMode(.inline)
+            .creditBadge()
             .alert("Error", isPresented: .init(
                 get: { errorMessage != nil },
                 set: { if !$0 { errorMessage = nil } }
