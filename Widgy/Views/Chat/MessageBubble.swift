@@ -50,7 +50,7 @@ struct MessageBubble: View {
 
         if message.role == .user {
             base
-                .background(Color.accentColor)
+                .background(BrandTheme.gradient)
                 .clipShape(RoundedRectangle(cornerRadius: 18))
         } else {
             base

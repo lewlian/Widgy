@@ -228,11 +228,8 @@ struct ChatView: View {
             saveWidget(config)
         } label: {
             Label("Save Widget", systemImage: "square.and.arrow.down")
-                .font(.headline)
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 12)
         }
-        .buttonStyle(.borderedProminent)
+        .buttonStyle(.brand)
         .padding(.horizontal, 40)
         .padding(.vertical, 8)
     }

@@ -108,11 +108,8 @@ struct OnboardingView: View {
                 hasCompletedOnboarding = true
             } label: {
                 Text("Create Your First Widget")
-                    .font(.headline)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 16)
             }
-            .buttonStyle(.borderedProminent)
+            .buttonStyle(.brand)
             .padding(.horizontal, 32)
             .padding(.bottom, 48)
         }
