@@ -64,39 +64,57 @@ struct ConversationListView: View {
     // MARK: - Row
 
     private func conversationRow(_ conversation: Conversation) -> some View {
-        VStack(alignment: .leading, spacing: 4) {
-            HStack {
-                Text(conversation.title)
-                    .font(.headline)
-                    .lineLimit(1)
-
-                Spacer()
-
-                Text(conversation.updatedAt, style: .relative)
-                    .font(.caption)
+        HStack(spacing: 12) {
+            // Widget thumbnail if available
+            if let config = conversation.currentConfig {
+                WidgetPreviewChrome(config: config)
+                    .scaleEffect(0.25)
+                    .frame(width: 48, height: 48)
+                    .clipShape(RoundedRectangle(cornerRadius: 8))
+            } else {
+                // Placeholder icon
+                Image(systemName: "bubble.left.and.text.bubble.right")
+                    .font(.title3)
                     .foregroundStyle(.secondary)
+                    .frame(width: 48, height: 48)
+                    .background(.ultraThinMaterial)
+                    .clipShape(RoundedRectangle(cornerRadius: 8))
             }
 
-            if let lastMessage = conversation.messages.last {
-                Text(lastMessage.content)
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-                    .lineLimit(2)
-            }
+            VStack(alignment: .leading, spacing: 4) {
+                HStack {
+                    Text(conversation.title)
+                        .font(.headline)
+                        .lineLimit(1)
 
-            HStack(spacing: 4) {
-                Image(systemName: familyIcon(conversation.family))
-                    .font(.caption2)
-                Text(conversation.family.displayName)
-                    .font(.caption2)
+                    Spacer()
 
-                if conversation.currentConfig != nil {
-                    Text("  |  Widget generated")
-                        .font(.caption2)
-                        .foregroundStyle(.green)
+                    Text(conversation.updatedAt, style: .relative)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
                 }
+
+                if let lastMessage = conversation.messages.last {
+                    Text(lastMessage.content)
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                }
+
+                HStack(spacing: 4) {
+                    Image(systemName: familyIcon(conversation.family))
+                        .font(.caption2)
+                    Text(conversation.family.displayName)
+                        .font(.caption2)
+
+                    if conversation.currentConfig != nil {
+                        Text(" \u{2022} Widget generated")
+                            .font(.caption2)
+                            .foregroundStyle(.green)
+                    }
+                }
+                .foregroundStyle(.tertiary)
             }
-            .foregroundStyle(.tertiary)
         }
         .padding(.vertical, 4)
     }
