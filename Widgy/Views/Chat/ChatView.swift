@@ -59,6 +59,11 @@ struct ChatView: View {
             .sheet(isPresented: $showingSubscription) {
                 SubscriptionView()
             }
+            .sensoryFeedback(.success, trigger: showingSaveConfirmation)
+            .sensoryFeedback(.warning, trigger: showingSaveLimitAlert)
+            .sensoryFeedback(.error, trigger: errorMessage) { _, newValue in
+                newValue != nil
+            }
         }
     }
 

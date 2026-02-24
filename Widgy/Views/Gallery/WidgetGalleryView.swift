@@ -55,6 +55,7 @@ struct WidgetGalleryView: View {
             } message: {
                 Text("Enter a new name for this widget.")
             }
+            .sensoryFeedback(.warning, trigger: showingSaveLimitAlert)
         }
     }
 

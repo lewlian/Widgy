@@ -55,6 +55,7 @@ struct ContentView: View {
         .shadow(color: .black.opacity(0.1), radius: 16, y: 8)
         .padding(.horizontal, 40)
         .padding(.bottom, 4)
+        .sensoryFeedback(.selection, trigger: selectedTab)
     }
 
     private func tabBarItem(icon: String, label: String, tab: Int) -> some View {
