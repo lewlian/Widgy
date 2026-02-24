@@ -197,10 +197,9 @@ struct ChatView: View {
     private var streamingIndicator: some View {
         HStack {
             VStack(alignment: .leading, spacing: 8) {
-                HStack(spacing: 6) {
-                    ProgressView()
-                        .controlSize(.small)
-                    Text("Generating widget...")
+                HStack(spacing: 8) {
+                    TypingIndicator()
+                    Text("Generating...")
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                 }
