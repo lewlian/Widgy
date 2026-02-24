@@ -92,7 +92,7 @@ final class ConversationManager {
 
     // MARK: - Send Message
 
-    func sendMessage(_ text: String) async throws -> WidgetConfig {
+    func sendMessage(_ text: String) async throws -> GenerationResult {
         guard let conversation = activeConversation else {
             let newConvo = startNewConversation()
             activeConversation = newConvo
@@ -102,7 +102,7 @@ final class ConversationManager {
         return try await sendMessage(text, in: conversation)
     }
 
-    private func sendMessage(_ text: String, in conversation: Conversation) async throws -> WidgetConfig {
+    private func sendMessage(_ text: String, in conversation: Conversation) async throws -> GenerationResult {
         var conversation = conversation
 
         // Add user message
@@ -117,27 +117,35 @@ final class ConversationManager {
 
         updateConversation(conversation)
 
-        // Generate widget
-        let config = try await generationService.generate(
+        // Generate widget or get text reply
+        let result = try await generationService.generate(
             prompt: text,
             conversationHistory: conversation.messages,
             existingConfig: conversation.currentConfig,
             family: conversation.family
         )
 
-        // Add assistant response
-        let assistantMessage = ConversationMessage(
-            role: .assistant,
-            content: "Here's your widget!",
-            widgetConfig: config
-        )
-        conversation.messages.append(assistantMessage)
-        conversation.currentConfig = config
-        conversation.updatedAt = Date()
+        switch result {
+        case .widget(let config):
+            let assistantMessage = ConversationMessage(
+                role: .assistant,
+                content: "Here's your \"\(config.name)\" widget. How would you like to change it?",
+                widgetConfig: config
+            )
+            conversation.messages.append(assistantMessage)
+            conversation.currentConfig = config
+        case .textReply(let reply):
+            let assistantMessage = ConversationMessage(
+                role: .assistant,
+                content: reply
+            )
+            conversation.messages.append(assistantMessage)
+        }
 
+        conversation.updatedAt = Date()
         updateConversation(conversation)
 
-        return config
+        return result
     }
 
     // MARK: - Helpers

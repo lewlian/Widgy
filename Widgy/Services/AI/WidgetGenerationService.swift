@@ -5,6 +5,12 @@ import WidgyCore
 
 /// Manages AI-powered widget generation via Supabase Edge Functions.
 /// Handles SSE streaming, JSON parsing, validation, and retry logic.
+/// Result of a generation attempt — either a widget config or a text reply
+enum GenerationResult {
+    case widget(WidgetConfig)
+    case textReply(String)
+}
+
 @MainActor @Observable
 final class WidgetGenerationService {
     var isGenerating = false
@@ -23,7 +29,7 @@ final class WidgetGenerationService {
         conversationHistory: [ConversationMessage],
         existingConfig: WidgetConfig? = nil,
         family: WidgetFamily = .systemSmall
-    ) async throws -> WidgetConfig {
+    ) async throws -> GenerationResult {
         isGenerating = true
         streamedText = ""
         error = nil
@@ -47,13 +53,28 @@ final class WidgetGenerationService {
                 let result = validator.validate(config)
                 if result.isValid {
                     currentConfig = config
-                    return config
+                    return .widget(config)
                 } else {
                     let errorDesc = result.errors.map(\.description).joined(separator: "; ")
                     lastError = .validationFailed(errorDesc)
                     if attempt == AIConfig.maxRetries {
                         throw GenerationError.validationFailed(errorDesc)
                     }
+                }
+            } catch GenerationError.invalidJSON {
+                // If the response isn't JSON, treat it as a conversational text reply
+                let text = streamedText.trimmingCharacters(in: .whitespacesAndNewlines)
+                if !text.isEmpty && !text.hasPrefix("{") {
+                    return .textReply(text)
+                }
+                lastError = .invalidJSON("No valid JSON found")
+                if attempt == AIConfig.maxRetries {
+                    // Last resort: return the streamed text as a reply
+                    if !text.isEmpty {
+                        return .textReply(text)
+                    }
+                    self.error = .invalidJSON("No valid JSON found")
+                    throw GenerationError.invalidJSON("No valid JSON found")
                 }
             } catch let e as GenerationError {
                 lastError = e

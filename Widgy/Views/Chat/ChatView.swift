@@ -240,7 +240,11 @@ struct ChatView: View {
 
         Task {
             do {
-                _ = try await conversationManager.sendMessage(text)
+                let result = try await conversationManager.sendMessage(text)
+                // Refund credit if Claude just replied with text (no widget generated)
+                if case .textReply = result {
+                    creditManager.remainingCredits += 1
+                }
             } catch {
                 // Refund credit on failure
                 creditManager.remainingCredits += 1
