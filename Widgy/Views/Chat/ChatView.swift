@@ -127,12 +127,23 @@ struct ChatView: View {
         conversationManager.activeConversation?.messages ?? []
     }
 
+    // MARK: - Suggestion Chips
+
+    private let suggestions: [(icon: String, text: String, prompt: String)] = [
+        ("clock.fill", "Minimal Clock", "A minimal clock widget with the current time in large bold text and the date below in a smaller font, on a dark background"),
+        ("cloud.sun.fill", "Weather Dashboard", "A weather widget showing the current temperature in large text, weather condition icon, and today's high/low temperatures"),
+        ("battery.75percent", "Battery Meter", "A battery level widget with a circular gauge showing the current percentage, in a clean modern style"),
+        ("calendar", "Next Event", "A calendar widget showing my next upcoming event with the event name, time, and a subtle calendar icon"),
+        ("figure.run", "Fitness Tracker", "A fitness widget showing today's steps count with a progress ring and a small running icon"),
+        ("quote.opening", "Daily Quote", "An inspirational quote widget with elegant serif text centered on a soft gradient background"),
+    ]
+
     // MARK: - Empty State
 
     private var emptyState: some View {
-        VStack(spacing: 16) {
+        VStack(spacing: 20) {
             Spacer()
-                .frame(height: 60)
+                .frame(height: 40)
 
             Image(systemName: "widget.small.badge.plus")
                 .font(.system(size: 50))
@@ -141,11 +152,14 @@ struct ChatView: View {
             Text("Describe Your Widget")
                 .font(.title2.bold())
 
-            Text("Tell me what you'd like your widget to look like and I'll create it for you.")
+            Text("Tell me what you'd like your widget to look like, or try a suggestion below.")
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 40)
+
+            // Suggestion chips
+            suggestionChips
 
             // Credit info
             Text("\(creditManager.remainingCredits) credits remaining")
@@ -154,6 +168,26 @@ struct ChatView: View {
 
             Spacer()
         }
+    }
+
+    private var suggestionChips: some View {
+        FlowLayout(spacing: 8) {
+            ForEach(suggestions, id: \.text) { suggestion in
+                Button {
+                    messageText = suggestion.prompt
+                    sendMessage()
+                } label: {
+                    Label(suggestion.text, systemImage: suggestion.icon)
+                        .font(.subheadline)
+                        .padding(.horizontal, 14)
+                        .padding(.vertical, 8)
+                        .background(.ultraThinMaterial)
+                        .clipShape(Capsule())
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .padding(.horizontal, 20)
     }
 
     // MARK: - Streaming Indicator
