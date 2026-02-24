@@ -26,13 +26,13 @@ struct ChatView: View {
 
                 Divider()
 
-                // Messages
-                messagesScrollView
+                // Messages with floating input overlay
+                ZStack(alignment: .bottom) {
+                    messagesScrollView
 
-                Divider()
-
-                // Input area
-                inputArea
+                    // Floating input bar
+                    inputArea
+                }
             }
             .navigationTitle("New Widget")
             .navigationBarTitleDisplayMode(.inline)
@@ -107,6 +107,7 @@ struct ChatView: View {
                     }
                 }
                 .padding()
+                .padding(.bottom, 70) // Space for floating input bar
             }
             .onChange(of: messages.count) { _, _ in
                 withAnimation {
@@ -238,26 +239,33 @@ struct ChatView: View {
     // MARK: - Input Area
 
     private var inputArea: some View {
-        HStack(spacing: 12) {
+        HStack(spacing: 10) {
             TextField("Describe your widget...", text: $messageText, axis: .vertical)
                 .textFieldStyle(.plain)
                 .lineLimit(1...5)
-                .padding(.horizontal, 14)
+                .padding(.leading, 16)
                 .padding(.vertical, 10)
-                .background(.ultraThinMaterial)
-                .clipShape(RoundedRectangle(cornerRadius: 20))
 
             Button {
                 sendMessage()
             } label: {
                 Image(systemName: "arrow.up.circle.fill")
-                    .font(.system(size: 32))
-                    .foregroundStyle(.tint)
+                    .font(.system(size: 30))
+                    .foregroundStyle(
+                        messageText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || conversationManager.isGenerating
+                        ? Color.secondary.opacity(0.4)
+                        : Color.accentColor
+                    )
             }
             .disabled(messageText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || conversationManager.isGenerating)
+            .padding(.trailing, 6)
         }
-        .padding(.horizontal)
-        .padding(.vertical, 10)
+        .padding(.vertical, 4)
+        .background(.ultraThinMaterial)
+        .clipShape(Capsule())
+        .shadow(color: .black.opacity(0.08), radius: 12, y: 4)
+        .padding(.horizontal, 16)
+        .padding(.bottom, 8)
     }
 
     // MARK: - Actions
