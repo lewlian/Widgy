@@ -67,13 +67,16 @@ public enum ColorValue: Codable, Sendable, Equatable {
         let type = try container.decode(String.self, forKey: .type)
         let value = try container.decode(String.self, forKey: .value)
 
-        switch type {
-        case "hex": self = .hex(value)
-        case "system":
-            self = .system(SystemColor(rawValue: value) ?? .blue)
-        case "semantic":
-            self = .semantic(SemanticColor(rawValue: value) ?? .primary)
-        default: self = .hex(value)
+        // AI sometimes mislabels semantic colors as "system" — try both
+        if let system = SystemColor(rawValue: value) {
+            self = .system(system)
+        } else if let semantic = SemanticColor(rawValue: value) {
+            self = .semantic(semantic)
+        } else if value.hasPrefix("#") {
+            self = .hex(value)
+        } else {
+            // Last resort: treat as system blue
+            self = .system(.blue)
         }
     }
 

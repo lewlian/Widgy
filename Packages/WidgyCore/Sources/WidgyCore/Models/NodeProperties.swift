@@ -9,7 +9,7 @@ public struct StackProperties: Codable, Sendable, Equatable {
     public var style: NodeStyle?
 
     public init(
-        children: [WidgetNode],
+        children: [WidgetNode] = [],
         alignment: StackAlignment? = nil,
         spacing: CGFloat? = nil,
         style: NodeStyle? = nil
@@ -18,6 +18,32 @@ public struct StackProperties: Codable, Sendable, Equatable {
         self.alignment = alignment
         self.spacing = spacing
         self.style = style
+    }
+
+    enum CodingKeys: String, CodingKey {
+        case children, alignment, spacing, style
+        case glassEffect = "glass_effect"
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.children = (try? container.decode([WidgetNode].self, forKey: .children)) ?? []
+        self.alignment = try? container.decode(StackAlignment.self, forKey: .alignment)
+        self.spacing = try? container.decode(CGFloat.self, forKey: .spacing)
+        var style = try? container.decode(NodeStyle.self, forKey: .style)
+        if let glass = try? container.decode(Bool.self, forKey: .glassEffect) {
+            if style == nil { style = NodeStyle() }
+            style?.glassEffect = glass
+        }
+        self.style = style
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(children, forKey: .children)
+        try container.encodeIfPresent(alignment, forKey: .alignment)
+        try container.encodeIfPresent(spacing, forKey: .spacing)
+        try container.encodeIfPresent(style, forKey: .style)
     }
 }
 
@@ -35,13 +61,37 @@ public struct ZStackProperties: Codable, Sendable, Equatable {
     public var style: NodeStyle?
 
     public init(
-        children: [WidgetNode],
+        children: [WidgetNode] = [],
         alignment: ZStackAlignment? = nil,
         style: NodeStyle? = nil
     ) {
         self.children = children
         self.alignment = alignment
         self.style = style
+    }
+
+    enum CodingKeys: String, CodingKey {
+        case children, alignment, style
+        case glassEffect = "glass_effect"
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.children = (try? container.decode([WidgetNode].self, forKey: .children)) ?? []
+        self.alignment = try? container.decode(ZStackAlignment.self, forKey: .alignment)
+        var style = try? container.decode(NodeStyle.self, forKey: .style)
+        if let glass = try? container.decode(Bool.self, forKey: .glassEffect) {
+            if style == nil { style = NodeStyle() }
+            style?.glassEffect = glass
+        }
+        self.style = style
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(children, forKey: .children)
+        try container.encodeIfPresent(alignment, forKey: .alignment)
+        try container.encodeIfPresent(style, forKey: .style)
     }
 }
 
@@ -80,6 +130,42 @@ public struct TextProperties: Codable, Sendable, Equatable {
         self.minimumScaleFactor = minimumScaleFactor
         self.style = style
     }
+
+    enum CodingKeys: String, CodingKey {
+        case content, text, font, color, alignment
+        case lineLimit = "line_limit"
+        case minimumScaleFactor = "minimum_scale_factor"
+        case style
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        // Accept both "content" and "text" keys
+        if let content = try? container.decode(String.self, forKey: .content) {
+            self.content = content
+        } else if let text = try? container.decode(String.self, forKey: .text) {
+            self.content = text
+        } else {
+            self.content = ""
+        }
+        self.font = try? container.decode(FontDescriptor.self, forKey: .font)
+        self.color = try? container.decode(ColorValue.self, forKey: .color)
+        self.alignment = try? container.decode(TextAlignment.self, forKey: .alignment)
+        self.lineLimit = try? container.decode(Int.self, forKey: .lineLimit)
+        self.minimumScaleFactor = try? container.decode(CGFloat.self, forKey: .minimumScaleFactor)
+        self.style = try? container.decode(NodeStyle.self, forKey: .style)
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(content, forKey: .content)
+        try container.encodeIfPresent(font, forKey: .font)
+        try container.encodeIfPresent(color, forKey: .color)
+        try container.encodeIfPresent(alignment, forKey: .alignment)
+        try container.encodeIfPresent(lineLimit, forKey: .lineLimit)
+        try container.encodeIfPresent(minimumScaleFactor, forKey: .minimumScaleFactor)
+        try container.encodeIfPresent(style, forKey: .style)
+    }
 }
 
 public enum TextAlignment: String, Codable, Sendable {
@@ -114,11 +200,50 @@ public struct SFSymbolProperties: Codable, Sendable, Equatable {
 
     enum CodingKeys: String, CodingKey {
         case systemName = "system_name"
+        case symbol  // AI commonly uses this
+        case name    // AI commonly uses this
+        case icon    // AI commonly uses this
         case color
         case fontSize = "font_size"
         case fontWeight = "font_weight"
         case renderingMode = "rendering_mode"
-        case style
+        case style, font
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        // Accept system_name, symbol, name, or icon
+        if let v = try? container.decode(String.self, forKey: .systemName) {
+            self.systemName = v
+        } else if let v = try? container.decode(String.self, forKey: .symbol) {
+            self.systemName = v
+        } else if let v = try? container.decode(String.self, forKey: .name) {
+            self.systemName = v
+        } else if let v = try? container.decode(String.self, forKey: .icon) {
+            self.systemName = v
+        } else {
+            self.systemName = "questionmark"
+        }
+        self.color = try? container.decode(ColorValue.self, forKey: .color)
+        self.fontSize = try? container.decode(CGFloat.self, forKey: .fontSize)
+        self.fontWeight = try? container.decode(FontWeight.self, forKey: .fontWeight)
+        self.renderingMode = try? container.decode(SymbolRenderingMode.self, forKey: .renderingMode)
+        self.style = try? container.decode(NodeStyle.self, forKey: .style)
+        // Extract font size/weight from "font" object if present (AI commonly does this)
+        if let font = try? container.decode(FontDescriptor.self, forKey: .font) {
+            if self.fontSize == nil { self.fontSize = font.size }
+            if self.fontWeight == nil { self.fontWeight = font.weight }
+        }
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(systemName, forKey: .systemName)
+        try container.encodeIfPresent(color, forKey: .color)
+        try container.encodeIfPresent(fontSize, forKey: .fontSize)
+        try container.encodeIfPresent(fontWeight, forKey: .fontWeight)
+        try container.encodeIfPresent(renderingMode, forKey: .renderingMode)
+        try container.encodeIfPresent(style, forKey: .style)
     }
 }
 
@@ -262,8 +387,53 @@ public struct GaugeProperties: Codable, Sendable, Equatable {
         case label
         case currentValueLabel = "current_value_label"
         case gaugeStyle = "gauge_style"
-        case tint
-        case style
+        case gaugeStyleAlt = "style"  // AI often uses just "style"
+        case tint, color              // AI often uses "color" instead of "tint"
+        case width, height            // Ignored but AI sends them
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        // Accept value as Double or String (data binding like "{{battery.level}}")
+        if let v = try? container.decode(Double.self, forKey: .value) {
+            self.value = v
+        } else if let s = try? container.decode(String.self, forKey: .value) {
+            self.value = Double(s) ?? 0.5
+        } else {
+            self.value = 0.5
+        }
+        self.minValue = try? container.decode(Double.self, forKey: .minValue)
+        self.maxValue = try? container.decode(Double.self, forKey: .maxValue)
+        self.label = try? container.decode(String.self, forKey: .label)
+        self.currentValueLabel = try? container.decode(String.self, forKey: .currentValueLabel)
+        // Accept "gauge_style" or "style" (as string)
+        if let gs = try? container.decode(GaugeStyle.self, forKey: .gaugeStyle) {
+            self.gaugeStyle = gs
+        } else if let gs = try? container.decode(GaugeStyle.self, forKey: .gaugeStyleAlt) {
+            self.gaugeStyle = gs
+        } else {
+            self.gaugeStyle = nil
+        }
+        // Accept "tint" or "color"
+        if let t = try? container.decode(ColorValue.self, forKey: .tint) {
+            self.tint = t
+        } else if let c = try? container.decode(ColorValue.self, forKey: .color) {
+            self.tint = c
+        } else {
+            self.tint = nil
+        }
+        self.style = nil // Avoid conflict with gaugeStyleAlt
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(value, forKey: .value)
+        try container.encodeIfPresent(minValue, forKey: .minValue)
+        try container.encodeIfPresent(maxValue, forKey: .maxValue)
+        try container.encodeIfPresent(label, forKey: .label)
+        try container.encodeIfPresent(currentValueLabel, forKey: .currentValueLabel)
+        try container.encodeIfPresent(gaugeStyle, forKey: .gaugeStyle)
+        try container.encodeIfPresent(tint, forKey: .tint)
     }
 }
 
@@ -353,6 +523,44 @@ public struct ContainerRelativeShapeProperties: Codable, Sendable, Equatable {
     public init(fill: ColorValue? = nil, style: NodeStyle? = nil) {
         self.fill = fill
         self.style = style
+    }
+
+    enum CodingKeys: String, CodingKey {
+        case fill
+        case fillColor = "fill_color"
+        case backgroundColor = "background_color"
+        case color
+        case glassEffect = "glass_effect"
+        case style
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        // Accept fill, fill_color, background_color, or color
+        if let v = try? container.decode(ColorValue.self, forKey: .fill) {
+            self.fill = v
+        } else if let v = try? container.decode(ColorValue.self, forKey: .fillColor) {
+            self.fill = v
+        } else if let v = try? container.decode(ColorValue.self, forKey: .backgroundColor) {
+            self.fill = v
+        } else if let v = try? container.decode(ColorValue.self, forKey: .color) {
+            self.fill = v
+        } else {
+            self.fill = nil
+        }
+        // Accept glass_effect at top level → wrap into NodeStyle
+        var style = try? container.decode(NodeStyle.self, forKey: .style)
+        if let glassEffect = try? container.decode(Bool.self, forKey: .glassEffect) {
+            if style == nil { style = NodeStyle() }
+            style?.glassEffect = glassEffect
+        }
+        self.style = style
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encodeIfPresent(fill, forKey: .fill)
+        try container.encodeIfPresent(style, forKey: .style)
     }
 }
 

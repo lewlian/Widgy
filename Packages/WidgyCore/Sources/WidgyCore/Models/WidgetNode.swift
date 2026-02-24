@@ -45,15 +45,21 @@ public indirect enum WidgetNode: Codable, Sendable, Equatable {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         let type = try container.decode(NodeType.self, forKey: .type)
 
+        // Children may appear at node level (AI output) or inside properties (our schema)
+        let nodeLevelChildren = try container.decodeIfPresent([WidgetNode].self, forKey: .children)
+
         switch type {
         case .vStack:
-            let props = try container.decode(StackProperties.self, forKey: .properties)
+            var props = (try? container.decode(StackProperties.self, forKey: .properties)) ?? StackProperties()
+            if props.children.isEmpty, let children = nodeLevelChildren { props.children = children }
             self = .vStack(props)
         case .hStack:
-            let props = try container.decode(StackProperties.self, forKey: .properties)
+            var props = (try? container.decode(StackProperties.self, forKey: .properties)) ?? StackProperties()
+            if props.children.isEmpty, let children = nodeLevelChildren { props.children = children }
             self = .hStack(props)
         case .zStack:
-            let props = try container.decode(ZStackProperties.self, forKey: .properties)
+            var props = (try? container.decode(ZStackProperties.self, forKey: .properties)) ?? ZStackProperties()
+            if props.children.isEmpty, let children = nodeLevelChildren { props.children = children }
             self = .zStack(props)
         case .text:
             let props = try container.decode(TextProperties.self, forKey: .properties)
