@@ -23,6 +23,14 @@ enum SubscriptionTier: String, Codable, Sendable {
         case .pro: return 50
         }
     }
+
+    var maxSavedWidgets: Int {
+        switch self {
+        case .free: return 3
+        case .standard: return .max
+        case .pro: return .max
+        }
+    }
 }
 
 // MARK: - Store Manager

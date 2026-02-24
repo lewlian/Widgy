@@ -21,8 +21,8 @@ struct SubscriptionView: View {
                         price: "Free",
                         features: [
                             "3 widget generations (one-time)",
-                            "All widget sizes",
-                            "Basic templates"
+                            "Save up to 3 widgets",
+                            "All widget sizes"
                         ]
                     )
 

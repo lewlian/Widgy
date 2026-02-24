@@ -5,11 +5,14 @@ import WidgyCore
 
 struct WidgetGalleryView: View {
     @Environment(ConversationManager.self) private var conversationManager
+    @Environment(StoreManager.self) private var storeManager
     @State private var savedWidgets: [WidgetConfig] = []
     @State private var errorMessage: String?
     @State private var widgetToRename: WidgetConfig?
     @State private var renameText = ""
     @State private var showingRenameAlert = false
+    @State private var showingSaveLimitAlert = false
+    @State private var showingSubscription = false
 
     private let columns = [
         GridItem(.adaptive(minimum: 160), spacing: 16)
@@ -34,6 +37,15 @@ struct WidgetGalleryView: View {
                 Button("OK", role: .cancel) { }
             } message: {
                 Text(errorMessage ?? "")
+            }
+            .alert("Widget Limit Reached", isPresented: $showingSaveLimitAlert) {
+                Button("Upgrade") { showingSubscription = true }
+                Button("Cancel", role: .cancel) { }
+            } message: {
+                Text("Free accounts can save up to \(storeManager.currentTier.maxSavedWidgets) widgets. Upgrade to save unlimited widgets.")
+            }
+            .sheet(isPresented: $showingSubscription) {
+                SubscriptionView()
             }
             .alert("Rename Widget", isPresented: $showingRenameAlert) {
                 TextField("Widget name", text: $renameText)
@@ -139,6 +151,13 @@ struct WidgetGalleryView: View {
     }
 
     private func duplicateWidget(_ widget: WidgetConfig) {
+        // Check save limit for free tier
+        let maxAllowed = storeManager.currentTier.maxSavedWidgets
+        if savedWidgets.count >= maxAllowed {
+            showingSaveLimitAlert = true
+            return
+        }
+
         var duplicate = widget
         duplicate = WidgetConfig(
             schemaVersion: widget.schemaVersion,
@@ -189,4 +208,5 @@ struct WidgetGalleryView: View {
 #Preview {
     WidgetGalleryView()
         .environment(ConversationManager())
+        .environment(StoreManager())
 }

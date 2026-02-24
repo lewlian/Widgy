@@ -6,11 +6,13 @@ import WidgyCore
 struct ChatView: View {
     @Environment(ConversationManager.self) private var conversationManager
     @Environment(CreditManager.self) private var creditManager
+    @Environment(StoreManager.self) private var storeManager
     @State private var messageText = ""
     @State private var showingSaveConfirmation = false
     @State private var errorMessage: String?
     @State private var selectedFamily: WidgetFamily = .systemSmall
     @State private var showingSubscription = false
+    @State private var showingSaveLimitAlert = false
 
     private let homeScreenFamilies: [WidgetFamily] = [.systemSmall, .systemMedium, .systemLarge]
 
@@ -46,6 +48,12 @@ struct ChatView: View {
                 Button("OK", role: .cancel) { }
             } message: {
                 Text("Your widget has been saved and is ready to use.")
+            }
+            .alert("Widget Limit Reached", isPresented: $showingSaveLimitAlert) {
+                Button("Upgrade") { showingSubscription = true }
+                Button("Cancel", role: .cancel) { }
+            } message: {
+                Text("Free accounts can save up to \(storeManager.currentTier.maxSavedWidgets) widgets. Upgrade to save unlimited widgets.")
             }
             .sheet(isPresented: $showingSubscription) {
                 SubscriptionView()
@@ -254,6 +262,14 @@ struct ChatView: View {
     }
 
     private func saveWidget(_ config: WidgetConfig) {
+        // Check save limit for free tier
+        let savedCount = (try? AppGroupManager.shared.loadAllWidgetConfigs().count) ?? 0
+        let maxAllowed = storeManager.currentTier.maxSavedWidgets
+        if savedCount >= maxAllowed {
+            showingSaveLimitAlert = true
+            return
+        }
+
         do {
             var configToSave = config
             configToSave.family = selectedFamily
@@ -270,4 +286,5 @@ struct ChatView: View {
     ChatView()
         .environment(ConversationManager())
         .environment(CreditManager())
+        .environment(StoreManager())
 }
