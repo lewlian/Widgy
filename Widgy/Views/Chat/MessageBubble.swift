@@ -5,6 +5,7 @@ import WidgyCore
 
 struct MessageBubble: View {
     let message: ConversationMessage
+    @State private var appeared = false
     @State private var widgetAppeared = false
 
     var body: some View {
@@ -36,6 +37,13 @@ struct MessageBubble: View {
 
             if message.role == .assistant || message.role == .system {
                 Spacer(minLength: 60)
+            }
+        }
+        .offset(y: appeared ? 0 : 12)
+        .opacity(appeared ? 1 : 0)
+        .onAppear {
+            withAnimation(.spring(duration: 0.35, bounce: 0.15)) {
+                appeared = true
             }
         }
     }
