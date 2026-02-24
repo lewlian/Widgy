@@ -7,22 +7,32 @@ struct WidgetCardView: View {
     let config: WidgetConfig
 
     var body: some View {
-        VStack(spacing: 8) {
+        VStack(spacing: 10) {
             WidgetPreviewChrome(config: config)
                 .scaleEffect(scaleFactor)
                 .frame(height: scaledHeight)
+                .clipped()
 
-            Text(config.name)
-                .font(.caption)
-                .fontWeight(.medium)
-                .lineLimit(1)
-                .truncationMode(.tail)
+            VStack(spacing: 2) {
+                Text(config.name)
+                    .font(.subheadline.weight(.semibold))
+                    .lineLimit(1)
+                    .truncationMode(.tail)
 
-            Text(config.family.displayName)
-                .font(.caption2)
-                .foregroundStyle(.secondary)
+                Text(config.family.displayName)
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+            }
         }
-        .padding(8)
+        .padding(12)
+        .frame(maxWidth: .infinity)
+        .background(.ultraThinMaterial)
+        .clipShape(RoundedRectangle(cornerRadius: 16))
+        .overlay {
+            RoundedRectangle(cornerRadius: 16)
+                .stroke(.white.opacity(0.15), lineWidth: 0.5)
+        }
+        .shadow(color: .black.opacity(0.06), radius: 8, y: 4)
     }
 
     // Scale down to fit in a grid cell
