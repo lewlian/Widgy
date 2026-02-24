@@ -23,7 +23,8 @@ struct SubscriptionView: View {
                             "3 widget generations (one-time)",
                             "Save up to 3 widgets",
                             "All widget sizes"
-                        ]
+                        ],
+                        gradient: nil
                     )
 
                     tierCard(
@@ -34,7 +35,12 @@ struct SubscriptionView: View {
                             "All widget sizes",
                             "Priority generation",
                             "Save unlimited widgets"
-                        ]
+                        ],
+                        gradient: LinearGradient(
+                            colors: [Color.accentColor.opacity(0.06), Color.accentColor.opacity(0.02)],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
                     )
 
                     tierCard(
@@ -46,7 +52,12 @@ struct SubscriptionView: View {
                             "Priority generation",
                             "Save unlimited widgets",
                             "Early access to new features"
-                        ]
+                        ],
+                        gradient: LinearGradient(
+                            colors: [Color(red: 0.44, green: 0.38, blue: 0.99).opacity(0.12), Color(red: 0.33, green: 0.55, blue: 1.0).opacity(0.06)],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
                     )
 
                     // Restore purchases
@@ -78,6 +89,8 @@ struct SubscriptionView: View {
             Text("\(creditManager.remainingCredits)")
                 .font(.system(size: 48, weight: .bold, design: .rounded))
                 .foregroundStyle(.tint)
+                .contentTransition(.numericText(value: Double(creditManager.remainingCredits)))
+                .animation(.spring(duration: 0.4), value: creditManager.remainingCredits)
 
             Text("Credits Remaining")
                 .font(.subheadline)
@@ -100,14 +113,23 @@ struct SubscriptionView: View {
 
     // MARK: - Tier Card
 
-    private func tierCard(tier: SubscriptionTier, price: String, features: [String]) -> some View {
+    private func tierCard(tier: SubscriptionTier, price: String, features: [String], gradient: LinearGradient?) -> some View {
         let isCurrent = storeManager.currentTier == tier
+        let isPro = tier == .pro
 
         return VStack(alignment: .leading, spacing: 12) {
             HStack {
                 VStack(alignment: .leading, spacing: 4) {
-                    Text(tier.displayName)
-                        .font(.title3.bold())
+                    HStack(spacing: 6) {
+                        Text(tier.displayName)
+                            .font(.title3.bold())
+
+                        if isPro {
+                            Image(systemName: "sparkles")
+                                .font(.caption)
+                                .foregroundStyle(Color.accentColor)
+                        }
+                    }
 
                     Text(price)
                         .font(.subheadline)
@@ -147,21 +169,40 @@ struct SubscriptionView: View {
                     purchaseTier(tier)
                 } label: {
                     Text(storeManager.currentTier == .free ? "Subscribe" : "Upgrade")
-                        .font(.headline)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 10)
                 }
-                .buttonStyle(.borderedProminent)
+                .buttonStyle(.brand)
                 .padding(.top, 4)
             }
         }
         .padding()
-        .background(.ultraThinMaterial)
+        .background {
+            if let gradient {
+                RoundedRectangle(cornerRadius: 16)
+                    .fill(gradient)
+                    .overlay {
+                        RoundedRectangle(cornerRadius: 16)
+                            .fill(.ultraThinMaterial)
+                    }
+            } else {
+                RoundedRectangle(cornerRadius: 16)
+                    .fill(.ultraThinMaterial)
+            }
+        }
         .clipShape(RoundedRectangle(cornerRadius: 16))
         .overlay {
             if isCurrent {
                 RoundedRectangle(cornerRadius: 16)
                     .stroke(.tint, lineWidth: 2)
+            } else if isPro {
+                RoundedRectangle(cornerRadius: 16)
+                    .strokeBorder(
+                        LinearGradient(
+                            colors: [Color(red: 0.44, green: 0.38, blue: 0.99).opacity(0.5), Color(red: 0.33, green: 0.55, blue: 1.0).opacity(0.1)],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        ),
+                        lineWidth: 1
+                    )
             }
         }
     }
